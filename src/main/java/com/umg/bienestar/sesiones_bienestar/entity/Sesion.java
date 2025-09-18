@@ -2,8 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.umg.bienestar.sesiones_bienestar.model;
+package com.umg.bienestar.sesiones_bienestar.entity;
 
+import com.umg.bienestar.sesiones_bienestar.entity.Factura;
+import com.umg.bienestar.sesiones_bienestar.entity.Cita;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
