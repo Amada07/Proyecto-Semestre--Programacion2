@@ -8,8 +8,13 @@ package com.umg.bienestar.sesiones_bienestar.exception;
  *
  * @author amada
  */
-public class BusinessException extends Exception{
-  public BusinessException(String mensaje) {
-        super(mensaje);
-    }  
+public class BusinessException extends RuntimeException {
+    public BusinessException(String message) {
+        super(message);
+    }
+    
+    public BusinessException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
+
