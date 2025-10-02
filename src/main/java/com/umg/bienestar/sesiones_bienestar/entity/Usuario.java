@@ -4,45 +4,40 @@
  */
 package com.umg.bienestar.sesiones_bienestar.entity;
 
-import com.umg.bienestar.sesiones_bienestar.model.RolUsuario;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import java.time.LocalDateTime;
 
 /**
  *
  * @author amada
  */
+
 @Entity
-@Table(name="usuarios")
+@Table(name = "usuarios")
 @Inheritance(strategy = InheritanceType.JOINED)
-public abstract class Usuario {
+public class Usuario {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @NotBlank(message = "El nombre es obligatorio")
-    @Size(min = 2, max = 100, message = "El nombre debe tener entre 2 y 100 caracteres")
-    @Column(nullable = false, length = 100)
-    private String nombre;
-    
-    @NotBlank(message = "El email es obligatorio")
-    @Email(message = "El formato del email es inválido")
-    @Column(nullable = false, unique = true, length = 100)
-    private String email;
-    
-    @NotBlank(message = "El username es obligatorio")
-    @Size(min = 3, max = 50, message = "El username debe tener entre 3 y 50 caracteres")
-    @Column(nullable = false, unique = true, length = 50)
+    @NotBlank(message = "El nombre de usuario es obligatorio")
+    @Size(min = 4, max = 50, message = "El nombre de usuario debe tener entre 4 y 50 caracteres")
+    @Column(unique = true, nullable = false, length = 50)
     private String username;
     
     @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
+    @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
     @Column(nullable = false)
     private String password;
+    
+    @NotBlank(message = "El email es obligatorio")
+    @Email(message = "El email debe ser válido")
+    @Column(unique = true, nullable = false, length = 100)
+    private String email;
     
     @NotNull(message = "El rol es obligatorio")
     @Enumerated(EnumType.STRING)
@@ -60,106 +55,77 @@ public abstract class Usuario {
     @Column(name = "fecha_actualizacion")
     private LocalDateTime fechaActualizacion;
     
-    @Column(name = "fecha_ultimo_acceso")
-    private LocalDateTime fechaUltimoAcceso;
-    
-    // Constructor protegido para JPA 
-    protected Usuario() {}
-    
-    protected Usuario(String nombre, String email, String username, String password, RolUsuario rol) {
-        this.nombre = nombre;
-        this.email = email;
+    public Usuario() {}
+
+    public Usuario(String username, String password, String email, RolUsuario rol) {
         this.username = username;
         this.password = password;
+        this.email = email;
         this.rol = rol;
-    }
-    
-    // Método template pattern
-    public final boolean puedeAcceder(String recurso) {
-        if (!activo) {
-            return false;
-        }
-        registrarAcceso();
-        return tienePermisoParaRecurso(recurso);
-    }
-    
-    // Método abstracto para implementar en subclases
-    protected abstract boolean tienePermisoParaRecurso(String recurso);
-    
-    // Métodos de negocio
-    public void registrarAcceso() {
-        this.fechaUltimoAcceso = LocalDateTime.now();
-    }
-    
-    public void activar() {
         this.activo = true;
     }
-    
-    public void desactivar() {
-        this.activo = false;
+
+    public Long getId() {
+        return id;
     }
-    
-    // Callback JPA para validaciones adicionales
-    @PrePersist
-    @PreUpdate
-    private void validarDatos() {
-        if (username == null && email != null) {
-            this.username = email;
-        }
+
+    public void setId(Long id) {
+        this.id = id;
     }
-    
-    // Getters y Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
-    
-    public String getEmail() { return email; }
-    public void setEmail(String email) { 
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
         this.email = email;
-        if (this.username == null) {
-            this.username = email;
-        }
     }
-    
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
-    
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
-    
-    public RolUsuario getRol() { return rol; }
-    public void setRol(RolUsuario rol) { this.rol = rol; }
-    
-    public Boolean getActivo() { return activo; }
-    public void setActivo(Boolean activo) { this.activo = activo; }
-    
-    public LocalDateTime getFechaCreacion() { return fechaCreacion; }
-    public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
-    
-    public LocalDateTime getFechaActualizacion() { return fechaActualizacion; }
-    public void setFechaActualizacion(LocalDateTime fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }
-    
-    public LocalDateTime getFechaUltimoAcceso() { return fechaUltimoAcceso; }
-    public void setFechaUltimoAcceso(LocalDateTime fechaUltimoAcceso) { this.fechaUltimoAcceso = fechaUltimoAcceso; }
-    
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-        Usuario usuario = (Usuario) obj;
-        return id != null && id.equals(usuario.id);
+
+    public RolUsuario getRol() {
+        return rol;
     }
-    
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
+
+    public void setRol(RolUsuario rol) {
+        this.rol = rol;
     }
-    
-    @Override
-    public String toString() {
-        return String.format("%s{id=%d, nombre='%s', email='%s', activo=%s}", 
-                getClass().getSimpleName(), id, nombre, email, activo);
+
+    public Boolean getActivo() {
+        return activo;
+    }
+
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
+    }
+
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+    }
+
+    public LocalDateTime getFechaActualizacion() {
+        return fechaActualizacion;
+    }
+
+    public void setFechaActualizacion(LocalDateTime fechaActualizacion) {
+        this.fechaActualizacion = fechaActualizacion;
     }
 }
