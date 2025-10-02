@@ -4,34 +4,59 @@
  */
 package com.umg.bienestar.sesiones_bienestar.entity;
 
-import com.umg.bienestar.sesiones_bienestar.entity.Factura;
-import com.umg.bienestar.sesiones_bienestar.entity.Cita;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 /**
  *
  * @author amada
  */
+
 @Entity
+@Table(name = "sesiones")
 public class Sesion {
- 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
-  
-  private LocalDateTime fechahora;
-  private String estado; //Atendida o Cancelada
-  private String notas;
-  
-  @OneToOne
-  @JoinColumn(name= "cita_id")
-  private Cita cita;
-  
-  @OneToOne(mappedBy= "sesion")
-  private Factura factura;
-  
-  //Getters y Setters
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @NotNull(message = "La cita es obligatoria")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cita_id", nullable = false)
+    private Cita cita;
+    
+    @NotNull(message = "La fecha de inicio es obligatoria")
+    @Column(name = "fecha_inicio", nullable = false)
+    private LocalDateTime fechaInicio;
+    
+    @Column(name = "fecha_fin")
+    private LocalDateTime fechaFin;
+    
+    @Size(max = 1000, message = "Las observaciones no pueden exceder 1000 caracteres")
+    @Column(length = 1000)
+    private String observaciones;
+    
+    @Column(name = "asistio")
+    private Boolean asistio = true;
+    
+    @CreationTimestamp
+    @Column(name = "fecha_creacion", nullable = false, updatable = false)
+    private LocalDateTime fechaCreacion;
+    
+    @UpdateTimestamp
+    @Column(name = "fecha_actualizacion")
+    private LocalDateTime fechaActualizacion;
+
+    public Sesion() {}
+
+    public Sesion(Cita cita, LocalDateTime fechaInicio) {
+        this.cita = cita;
+        this.fechaInicio = fechaInicio;
+        this.asistio = true;
+    }
 
     public Long getId() {
         return id;
@@ -41,30 +66,6 @@ public class Sesion {
         this.id = id;
     }
 
-    public LocalDateTime getFechahora() {
-        return fechahora;
-    }
-
-    public void setFechahora(LocalDateTime fechahora) {
-        this.fechahora = fechahora;
-    }
-
-    public String getEstado() {
-        return estado;
-    }
-
-    public void setEstado(String estado) {
-        this.estado = estado;
-    }
-
-    public String getNotas() {
-        return notas;
-    }
-
-    public void setNotas(String notas) {
-        this.notas = notas;
-    }
-
     public Cita getCita() {
         return cita;
     }
@@ -72,5 +73,52 @@ public class Sesion {
     public void setCita(Cita cita) {
         this.cita = cita;
     }
-  
+
+    public LocalDateTime getFechaInicio() {
+        return fechaInicio;
+    }
+
+    public void setFechaInicio(LocalDateTime fechaInicio) {
+        this.fechaInicio = fechaInicio;
+    }
+
+    public LocalDateTime getFechaFin() {
+        return fechaFin;
+    }
+
+    public void setFechaFin(LocalDateTime fechaFin) {
+        this.fechaFin = fechaFin;
+    }
+
+    public String getObservaciones() {
+        return observaciones;
+    }
+
+    public void setObservaciones(String observaciones) {
+        this.observaciones = observaciones;
+    }
+
+    public Boolean getAsistio() {
+        return asistio;
+    }
+
+    public void setAsistio(Boolean asistio) {
+        this.asistio = asistio;
+    }
+
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+    }
+
+    public LocalDateTime getFechaActualizacion() {
+        return fechaActualizacion;
+    }
+
+    public void setFechaActualizacion(LocalDateTime fechaActualizacion) {
+        this.fechaActualizacion = fechaActualizacion;
+    }
 }
