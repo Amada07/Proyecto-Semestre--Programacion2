@@ -8,8 +8,13 @@ package com.umg.bienestar.sesiones_bienestar.exception;
  *
  * @author amada
  */
-public class ResourceNotFoundException extends Exception{
-  public ResourceNotFoundException(String recurso, String id) {
-        super("No se encontró " + recurso + " con ID: " + id);
-    }  
+public class ResourceNotFoundException extends RuntimeException{
+public ResourceNotFoundException(String message) {
+        super(message);
+    }
+    
+    public ResourceNotFoundException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
+
