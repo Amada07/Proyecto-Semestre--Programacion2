@@ -8,21 +8,13 @@ package com.umg.bienestar.sesiones_bienestar.exception;
  *
  * @author amada
  */
-public class ValidationException extends Exception {
-    private String campo;
-    private String valor;
-    
-    public ValidationException(String mensaje) {
-        super(mensaje);
+public class ValidationException extends RuntimeException {
+    public ValidationException(String message) {
+        super(message);
     }
     
-    public ValidationException(String campo, String valor, String mensaje) {
-        super(String.format("Error en campo '%s' con valor '%s': %s", campo, valor, mensaje));
-        this.campo = campo;
-        this.valor = valor;
+    public ValidationException(String message, Throwable cause) {
+        super(message, cause);
     }
-    
-    public String getCampo() { return campo; }
-    public String getValor() { return valor; }
-} 
+}
 
