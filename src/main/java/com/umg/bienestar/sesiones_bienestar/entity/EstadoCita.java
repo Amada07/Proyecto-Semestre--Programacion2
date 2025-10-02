@@ -13,5 +13,6 @@ public enum EstadoCita {
     CONFIRMADA,
     CANCELADA,
     ATENDIDA,
+    RECHAZADA
     
 }
