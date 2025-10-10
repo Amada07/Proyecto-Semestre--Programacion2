@@ -9,9 +9,9 @@ import com.umg.bienestar.sesiones_bienestar.dto.LoginResponse;
 import com.umg.bienestar.sesiones_bienestar.entity.Usuario;
 import com.umg.bienestar.sesiones_bienestar.repository.jpa.UsuarioRepository;
 import com.umg.bienestar.sesiones_bienestar.security.JwtService;
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,33 +36,37 @@ public class AuthController {
     @Autowired
     private JwtService jwtService;
 
-    @PostMapping("/login")
-    @Operation(summary = "Iniciar sesión", description = "UC-02/UC-W09: Iniciar sesión web/móvil con JWT")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
-        Usuario usuario = usuarioRepository.findByUsername(loginRequest.getUsername())
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-        if (!passwordEncoder.matches(loginRequest.getPassword(), usuario.getPassword())) {
-            throw new RuntimeException("Contraseña incorrecta");
-        }
-
-        if (!usuario.getActivo()) {
-            throw new RuntimeException("Usuario inactivo");
-        }
-
-        String token = jwtService.generateToken(
-            usuario.getUsername(), 
-            usuario.getId(), 
-            usuario.getRol().name()
-        );
-        
-        LoginResponse response = new LoginResponse(
-            token,
-            usuario.getUsername(),
-            usuario.getRol().name(),
-            usuario.getId()
-        );
-
-        return ResponseEntity.ok(response);
+  @PostMapping("/login")
+public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+    Optional<Usuario> optionalUsuario = usuarioRepository.findByUsername(loginRequest.getUsername());
+    if (optionalUsuario.isEmpty()) {
+        optionalUsuario = usuarioRepository.findByEmail(loginRequest.getUsername());
     }
+
+    Usuario usuario = optionalUsuario
+        .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+    if (!passwordEncoder.matches(loginRequest.getPassword(), usuario.getPassword())) {
+        throw new RuntimeException("Contraseña incorrecta");
+    }
+
+    if (!usuario.getActivo()) {
+        throw new RuntimeException("Usuario inactivo");
+    }
+
+    String token = jwtService.generateToken(
+        usuario.getUsername(),
+        usuario.getId(),
+        usuario.getRol().name()
+    );
+
+    LoginResponse response = new LoginResponse(
+        token,
+        usuario.getUsername(),
+        usuario.getRol().name(),
+        usuario.getId()
+    );
+
+    return ResponseEntity.ok(response);
+ }
 }
