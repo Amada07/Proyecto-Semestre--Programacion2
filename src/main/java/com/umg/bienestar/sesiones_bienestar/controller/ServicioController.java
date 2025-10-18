@@ -4,6 +4,7 @@
  */
 package com.umg.bienestar.sesiones_bienestar.controller;
 
+import com.umg.bienestar.sesiones_bienestar.dto.ServicioRequest;
 import com.umg.bienestar.sesiones_bienestar.entity.Servicio;
 import com.umg.bienestar.sesiones_bienestar.service.impl.ServicioService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,11 +29,22 @@ public class ServicioController {
     @Autowired
     private ServicioService servicioService;
 
-    @PostMapping
-    @Operation(summary = "Crear nuevo servicio", description = "UC-W02: Permite registrar un nuevo servicio")
-    public ResponseEntity<Servicio> crear(@Valid @RequestBody Servicio servicio) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(servicioService.crear(servicio));
-    }
+@PostMapping
+@Operation(summary = "Crear nuevo servicio", description = "UC-W02: Permite registrar un nuevo servicio")
+public ResponseEntity<Servicio> crear(@Valid @RequestBody ServicioRequest request) {
+    Servicio servicio = new Servicio();
+    servicio.setCodigo(request.getCodigo());
+    servicio.setNombre(request.getNombre());
+    servicio.setDescripcion(request.getDescripcion());
+    servicio.setPrecio(request.getPrecio());
+    servicio.setDuracionMinutos(request.getDuracion());
+    servicio.setMaxConcurrentes(request.getCupoMaximo());
+    servicio.setActivo(true);
+
+    Servicio creado = servicioService.crear(servicio);
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(creado);
+}
 
     @GetMapping
     @Operation(summary = "Listar todos los servicios")
