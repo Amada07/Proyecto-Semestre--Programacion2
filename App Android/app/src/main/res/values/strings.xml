@@ -1,0 +1,59 @@
+<resources>
+    <string name="app_name">Bienestar Cliente</string>
+
+    <!-- Login -->
+    <string name="login_title">Bienvenido</string>
+    <string name="login_subtitle">Sistema de Gestión de Bienestar</string>
+    <string name="hint_username">Usuario o Email</string>
+    <string name="hint_password">Contraseña</string>
+    <string name="btn_login">Iniciar Sesión</string>
+    <string name="error_empty_username">Ingrese su usuario</string>
+    <string name="error_empty_password">Ingrese su contraseña</string>
+    <string name="error_login_failed">Credenciales inválidas</string>
+    <string name="error_network">Error de conexión. Intente nuevamente.</string>
+
+    <!-- Menu -->
+    <string name="menu_servicios">Servicios</string>
+    <string name="menu_agendar">Agendar Cita</string>
+    <string name="menu_mis_citas">Mis Citas</string>
+    <string name="menu_facturas">Mis Facturas</string>
+    <string name="menu_perfil">Mi Perfil</string>
+    <string name="menu_logout">Cerrar Sesión</string>
+
+    <!-- Servicios -->
+    <string name="servicios_title">Servicios Disponibles</string>
+    <string name="servicio_duracion">Duración: %d min</string>
+    <string name="servicio_precio">Q %.2f</string>
+    <string name="servicio_cupo">Cupo: %d personas</string>
+    <string name="btn_agendar">Agendar</string>
+
+    <!-- Citas -->
+    <string name="agendar_title">Agendar Nueva Cita</string>
+    <string name="seleccionar_servicio">Seleccionar Servicio</string>
+    <string name="seleccionar_fecha">Seleccionar Fecha</string>
+    <string name="seleccionar_hora">Seleccionar Hora</string>
+    <string name="observaciones">Observaciones (opcional)</string>
+    <string name="btn_confirmar_cita">Confirmar Cita</string>
+    <string name="cita_agendada_exito">Cita agendada exitosamente</string>
+
+    <!-- Estados de cita -->
+    <string name="estado_pendiente">Pendiente</string>
+    <string name="estado_confirmada">Confirmada</string>
+    <string name="estado_atendida">Atendida</string>
+    <string name="estado_cancelada">Cancelada</string>
+    <string name="estado_rechazada">Rechazada</string>
+
+    <!-- Facturas -->
+    <string name="factura_numero">Factura #%s</string>
+    <string name="factura_monto">Monto: Q %.2f</string>
+    <string name="factura_fecha">Fecha: %s</string>
+
+    <!-- General -->
+    <string name="loading">Cargando…</string>
+    <string name="no_data">No hay datos disponibles</string>
+    <string name="error_generic">Ocurrió un error. Intente nuevamente.</string>
+    <string name="confirm_logout">¿Está seguro de cerrar sesión?</string>
+    <string name="yes">Sí</string>
+    <string name="no">No</string>
+    <string name="cancel">Cancelar</string>
+</resources>

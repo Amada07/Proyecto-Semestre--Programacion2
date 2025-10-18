@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- PERMISOS -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.BienestarCliente"
+        android:usesCleartextTraffic="true"
+        tools:targetApi="31">
+
+        <!-- LoginActivity como launcher -->
+        <activity
+            android:name=".activities.LoginActivity"
+            android:exported="true"
+            android:theme="@style/Theme.BienestarCliente.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- MainActivity -->
+        <activity
+            android:name=".activities.MainActivity"
+            android:exported="false" />
+
+        <!-- ServiciosActivity -->
+        <activity
+            android:name=".activities.ServiciosActivity"
+            android:exported="false"
+            android:label="Servicios Disponibles" />
+
+        <!-- AgendarCitaActivity -->
+        <activity
+            android:name=".activities.AgendarCitaActivity"
+            android:exported="false"
+            android:label="Agendar Cita" />
+
+        <!-- MisSesionesActivity -->
+        <activity
+            android:name=".activities.MisSesionesActivity"
+            android:exported="false"
+            android:label="Mis Sesiones" />
+
+        <!-- MisFacturasActivity -->
+        <activity
+            android:name=".activities.MisFacturasActivity"
+            android:exported="false"
+            android:label="Mis Facturas" />
+
+        <!-- Perfil Activity  -->
+        <activity
+            android:name=".activities.PerfilActivity"
+            android:exported="false"
+            android:label="Mi Perfil" />
+
+    </application>
+
+</manifest>
