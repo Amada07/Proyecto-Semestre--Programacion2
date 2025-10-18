@@ -39,7 +39,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 usuario.getId(),
                 usuario.getUsername(),
                 usuario.getPassword(),
-                usuario.getRol().name(), 
+               "ROLE_"+ usuario.getRol().name(), 
                 usuario.getActivo()
             );
         }

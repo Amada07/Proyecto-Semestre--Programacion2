@@ -41,7 +41,8 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority(rol));
+    String authority = rol.startsWith("ROLE_") ? rol : "ROLE_" + rol;
+    return Collections.singletonList(new SimpleGrantedAuthority(authority));
     }
 
     @Override
