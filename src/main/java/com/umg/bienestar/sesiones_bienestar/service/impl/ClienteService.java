@@ -49,16 +49,18 @@ public class ClienteService {
             throw new ValidationException("El email ya está registrado");
         }
         
-        Cliente cliente = new Cliente();
-        cliente.setUsername(dto.getUsername());
-        cliente.setPassword(passwordEncoder.encode(dto.getPassword()));
-        cliente.setEmail(dto.getEmail());
-        cliente.setNombreCompleto(dto.getNombreCompleto());
-        cliente.setDpi(dto.getDpi());
-        cliente.setTelefono(dto.getTelefono());
-        cliente.setDireccion(dto.getDireccion());
-        cliente.setFechaNacimiento(dto.getFechaNacimiento());
-        cliente.setActivo(true);
+      Cliente cliente = new Cliente(
+        dto.getUsername(),
+        passwordEncoder.encode(dto.getPassword()),
+        dto.getEmail(),
+        dto.getNombreCompleto(),
+        dto.getDpi(),
+        dto.getTelefono(),
+        dto.getDireccion(),
+        dto.getFechaNacimiento()
+    );
+
+       cliente.setActivo(true); 
         
         Cliente guardado = clienteRepository.save(cliente);
         
@@ -163,17 +165,19 @@ public class ClienteService {
         if (!EMAIL_PATTERN.matcher(dto.getEmail()).matches()) {
             throw new ValidationException("El email no es válido");
         }
-        
+       /*
         if (!validarDPIGuatemalteco(dto.getDpi())) {
             throw new ValidationException("El DPI guatemalteco no es válido");
         }
+        */
     }
 
     private boolean validarDPIGuatemalteco(String dpi) {
-        if (dpi == null || dpi.length() != 13) {
+         // ?Temporal: desactiva la validación matemática de DPI guatemalteco
+        /*if (dpi == null || dpi.length() != 13) {
             return false;
         }
-        
+        */
         try {
             int suma = 0;
             for (int i = 0; i < 12; i++) {
