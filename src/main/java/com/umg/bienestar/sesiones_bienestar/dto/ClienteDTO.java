@@ -39,9 +39,8 @@ public class ClienteDTO {
     @NotBlank(message = "La dirección es obligatoria")
     private String direccion;
     
-    @NotNull(message = "La fecha de nacimiento es obligatoria")
-    private LocalDate fechaNacimiento;
-    
+    @NotBlank(message = "La fecha de nacimiento es obligatoria")
+    private String fechaNacimiento;
     private Boolean activo;
 
     public ClienteDTO() {}
@@ -110,13 +109,13 @@ public class ClienteDTO {
         this.direccion = direccion;
     }
 
-    public LocalDate getFechaNacimiento() {
-        return fechaNacimiento;
-    }
+    public String getFechaNacimiento() {
+    return fechaNacimiento;
+   }
 
-    public void setFechaNacimiento(LocalDate fechaNacimiento) {
-        this.fechaNacimiento = fechaNacimiento;
-    }
+    public void setFechaNacimiento(String fechaNacimiento) {
+    this.fechaNacimiento = fechaNacimiento;
+   }
 
     public Boolean getActivo() {
         return activo;

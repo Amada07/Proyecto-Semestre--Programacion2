@@ -2,10 +2,13 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
+
+
 package com.umg.bienestar.sesiones_bienestar.service.impl;
 
 import com.umg.bienestar.sesiones_bienestar.dto.ClienteDTO;
 import com.umg.bienestar.sesiones_bienestar.entity.Cliente;
+import com.umg.bienestar.sesiones_bienestar.entity.RolUsuario;
 import com.umg.bienestar.sesiones_bienestar.exception.ResourceNotFoundException;
 import com.umg.bienestar.sesiones_bienestar.exception.ValidationException;
 import com.umg.bienestar.sesiones_bienestar.repository.jpa.ClienteRepository;
@@ -14,14 +17,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
 import java.util.List;
 import java.util.regex.Pattern;
-
 /**
  *
  * @author amada
  */
-
 @Service
 @Transactional
 public class ClienteService {
@@ -48,21 +51,58 @@ public class ClienteService {
         if (clienteRepository.existsByEmail(dto.getEmail())) {
             throw new ValidationException("El email ya está registrado");
         }
+       
+        // CAMBIO 1: Crear Cliente vacío (no usar constructor con parámetros)
+      
+        Cliente cliente = new Cliente();
         
-      Cliente cliente = new Cliente(
-        dto.getUsername(),
-        passwordEncoder.encode(dto.getPassword()),
-        dto.getEmail(),
-        dto.getNombreCompleto(),
-        dto.getDpi(),
-        dto.getTelefono(),
-        dto.getDireccion(),
-        dto.getFechaNacimiento()
-    );
-
-       cliente.setActivo(true); 
+        // Setear datos del usuario base
+        cliente.setUsername(dto.getUsername());
+        cliente.setPassword(passwordEncoder.encode(dto.getPassword()));
+        cliente.setEmail(dto.getEmail());
         
+      
+        // CAMBIO 2: Setear explícitamente el rol CLIENTE
+        // Esto es CRÍTICO para la herencia JOINED
+ 
+        cliente.setRol(RolUsuario.CLIENTE);
+        cliente.setActivo(true);
+        
+      
+        // CAMBIO 3: Setear datos específicos de Cliente
+     
+        cliente.setNombreCompleto(dto.getNombreCompleto());
+        cliente.setDpi(dto.getDpi());
+        cliente.setTelefono(dto.getTelefono());
+        cliente.setDireccion(dto.getDireccion());
+        
+      
+        // CAMBIO 4: Convertir String a LocalDate
+        // Con validación por si viene vacío
+       
+        if (dto.getFechaNacimiento() != null && !dto.getFechaNacimiento().isEmpty()) {
+            LocalDate fechaNacimiento = LocalDate.parse(dto.getFechaNacimiento());
+            cliente.setFechaNacimiento(fechaNacimiento);
+        } else {
+            // Si no viene fecha, usar fecha por defecto
+            cliente.setFechaNacimiento(LocalDate.of(2000, 1, 1));
+        }
+        
+        System.out.println("=== DEBUG: Guardando Cliente ===");
+        System.out.println("Username: " + cliente.getUsername());
+        System.out.println("Email: " + cliente.getEmail());
+        System.out.println("Nombre Completo: " + cliente.getNombreCompleto());
+        System.out.println("DPI: " + cliente.getDpi());
+        System.out.println("Rol: " + cliente.getRol());
+        System.out.println("Telefono: " + cliente.getTelefono());
+        
+        // Guardar - Hibernate insertará en usuarios Y clientes automáticamente
         Cliente guardado = clienteRepository.save(cliente);
+        
+        System.out.println("=== DEBUG: Cliente Guardado ===");
+        System.out.println("ID generado: " + guardado.getId());
+        System.out.println("Rol confirmado en BD: " + guardado.getRol());
+        System.out.println("Nombre guardado: " + guardado.getNombreCompleto());
         
         auditoriaService.registrar(
             SecurityUtils.getCurrentUserId(),
@@ -83,7 +123,16 @@ public class ClienteService {
     }
 
     public List<Cliente> listarTodos() {
-        return clienteRepository.findAll();
+        List<Cliente> clientes = clienteRepository.findAll();
+        System.out.println("=== DEBUG: Listando clientes ===");
+        System.out.println("Total clientes encontrados: " + clientes.size());
+        clientes.forEach(c -> System.out.println(
+            "Cliente ID " + c.getId() + 
+            ": " + c.getNombreCompleto() + 
+            " | Email: " + c.getEmail() + 
+            " | Rol: " + c.getRol()
+        ));
+        return clientes;
     }
 
     public List<Cliente> listarActivos() {
@@ -104,7 +153,10 @@ public class ClienteService {
         cliente.setNombreCompleto(dto.getNombreCompleto());
         cliente.setTelefono(dto.getTelefono());
         cliente.setDireccion(dto.getDireccion());
-        cliente.setFechaNacimiento(dto.getFechaNacimiento());
+        cliente.setEmail(dto.getEmail());
+        
+        LocalDate fechaNacimiento = LocalDate.parse(dto.getFechaNacimiento());
+        cliente.setFechaNacimiento(fechaNacimiento);
         
         Cliente actualizado = clienteRepository.save(cliente);
         
@@ -165,19 +217,9 @@ public class ClienteService {
         if (!EMAIL_PATTERN.matcher(dto.getEmail()).matches()) {
             throw new ValidationException("El email no es válido");
         }
-       /*
-        if (!validarDPIGuatemalteco(dto.getDpi())) {
-            throw new ValidationException("El DPI guatemalteco no es válido");
-        }
-        */
     }
 
     private boolean validarDPIGuatemalteco(String dpi) {
-         // ?Temporal: desactiva la validación matemática de DPI guatemalteco
-        /*if (dpi == null || dpi.length() != 13) {
-            return false;
-        }
-        */
         try {
             int suma = 0;
             for (int i = 0; i < 12; i++) {

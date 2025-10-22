@@ -120,7 +120,7 @@ public class CitaService {
         return rechazada;
     }
 
-    public void cancelar(Long citaId) {
+    public Cita cancelar(Long citaId) {
         Cita cita = obtenerPorId(citaId);
         
         if (cita.getEstado() == EstadoCita.CANCELADA || cita.getEstado() == EstadoCita.ATENDIDA) {
@@ -136,7 +136,8 @@ public class CitaService {
         
         cita.setEstado(EstadoCita.CANCELADA);
         cita.setFechaCancelacion(ahora);
-        citaRepository.save(cita);
+        
+        Cita cancelada = citaRepository.save(cita); 
         
         auditoriaService.registrar(
             SecurityUtils.getCurrentUserId(),
@@ -144,9 +145,11 @@ public class CitaService {
             SecurityUtils.getCurrentUserRol(),
             "CANCELAR",
             "CITA",
-            cita.getId(),
-            "Cita cancelada para cliente " + cita.getCliente().getNombreCompleto()
+            cancelada.getId(),
+            "Cita cancelada para cliente " + cancelada.getCliente().getNombreCompleto()
         );
+        
+        return cancelada; 
     }
 
     public Cita obtenerPorId(Long id) {

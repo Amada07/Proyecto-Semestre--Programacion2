@@ -4,6 +4,7 @@
  */
 package com.umg.bienestar.sesiones_bienestar.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
@@ -46,9 +47,11 @@ public class Cliente extends Usuario {
     private LocalDate fechaNacimiento;
     
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("cliente-citas")
     private List<Cita> citas = new ArrayList<>();
     
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("cliente-facturas")
     private List<Factura> facturas = new ArrayList<>();
 
     public Cliente() {

@@ -4,6 +4,7 @@
  */
 package com.umg.bienestar.sesiones_bienestar.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -31,10 +32,12 @@ public class Factura {
     @NotNull(message = "El cliente es obligatorio")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", nullable = false)
+    @JsonBackReference("cliente-facturas")
     private Cliente cliente;
     
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cita_id")
+    @JsonBackReference("cita-factura")
     private Cita cita;
     
     @NotNull(message = "El monto es obligatorio")

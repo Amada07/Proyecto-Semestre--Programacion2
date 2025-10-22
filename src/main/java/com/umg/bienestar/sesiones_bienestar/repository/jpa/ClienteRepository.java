@@ -23,6 +23,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     // Método agregado para CustomUserDetailsService
     Optional<Cliente> findByUsername(String username);
     
+    boolean existsByUsername(String username);
     Optional<Cliente> findByDpi(String dpi);
     Optional<Cliente> findByEmail(String email);
     boolean existsByDpi(String dpi);

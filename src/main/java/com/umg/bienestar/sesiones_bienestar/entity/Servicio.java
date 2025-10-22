@@ -4,6 +4,7 @@
  */
 package com.umg.bienestar.sesiones_bienestar.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -67,6 +68,7 @@ public class Servicio {
     private LocalDateTime fechaActualizacion;
     
     @OneToMany(mappedBy = "servicio", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("servicio-citas")
     private List<Cita> citas = new ArrayList<>();
 
     public Servicio() {}

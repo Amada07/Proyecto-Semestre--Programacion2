@@ -3,17 +3,16 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.umg.bienestar.sesiones_bienestar.dto;
+
 import com.umg.bienestar.sesiones_bienestar.entity.EstadoCita;
 import jakarta.validation.constraints.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
 
 /**
  *
  * @author amada
  */
-
-
 public class CitaDTO {
     private Long id;
     
@@ -31,11 +30,22 @@ public class CitaDTO {
     private String notas;
     private String motivoRechazo;
     
+    // Campos adicionales para el frontend
     private String clienteNombre;
+    private String clienteEmail;
+    private String clienteTelefono;
     private String servicioNombre;
+    private BigDecimal servicioPrecio;
+    private Integer servicioDuracion;
+    
+    private LocalDateTime fechaCancelacion;
+    private LocalDateTime fechaConfirmacion;
+    private LocalDateTime fechaCreacion;
+    private LocalDateTime fechaActualizacion;
 
     public CitaDTO() {}
 
+    // Getters y Setters
     public Long getId() {
         return id;
     }
@@ -100,6 +110,22 @@ public class CitaDTO {
         this.clienteNombre = clienteNombre;
     }
 
+    public String getClienteEmail() {
+        return clienteEmail;
+    }
+
+    public void setClienteEmail(String clienteEmail) {
+        this.clienteEmail = clienteEmail;
+    }
+
+    public String getClienteTelefono() {
+        return clienteTelefono;
+    }
+
+    public void setClienteTelefono(String clienteTelefono) {
+        this.clienteTelefono = clienteTelefono;
+    }
+
     public String getServicioNombre() {
         return servicioNombre;
     }
@@ -107,6 +133,52 @@ public class CitaDTO {
     public void setServicioNombre(String servicioNombre) {
         this.servicioNombre = servicioNombre;
     }
-}
-  
 
+    public BigDecimal getServicioPrecio() {
+        return servicioPrecio;
+    }
+
+    public void setServicioPrecio(BigDecimal servicioPrecio) {
+        this.servicioPrecio = servicioPrecio;
+    }
+
+    public Integer getServicioDuracion() {
+        return servicioDuracion;
+    }
+
+    public void setServicioDuracion(Integer servicioDuracion) {
+        this.servicioDuracion = servicioDuracion;
+    }
+
+    public LocalDateTime getFechaCancelacion() {
+        return fechaCancelacion;
+    }
+
+    public void setFechaCancelacion(LocalDateTime fechaCancelacion) {
+        this.fechaCancelacion = fechaCancelacion;
+    }
+
+    public LocalDateTime getFechaConfirmacion() {
+        return fechaConfirmacion;
+    }
+
+    public void setFechaConfirmacion(LocalDateTime fechaConfirmacion) {
+        this.fechaConfirmacion = fechaConfirmacion;
+    }
+
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
+    }
+
+    public LocalDateTime getFechaActualizacion() {
+        return fechaActualizacion;
+    }
+
+    public void setFechaActualizacion(LocalDateTime fechaActualizacion) {
+        this.fechaActualizacion = fechaActualizacion;
+    }
+}

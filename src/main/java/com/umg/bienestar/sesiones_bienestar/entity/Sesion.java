@@ -4,6 +4,7 @@
  */
 package com.umg.bienestar.sesiones_bienestar.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -26,6 +27,7 @@ public class Sesion {
     @NotNull(message = "La cita es obligatoria")
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cita_id", nullable = false)
+    @JsonBackReference("cita-sesion")
     private Cita cita;
     
     @NotNull(message = "La fecha de inicio es obligatoria")

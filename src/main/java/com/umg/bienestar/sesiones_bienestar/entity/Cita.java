@@ -3,6 +3,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.umg.bienestar.sesiones_bienestar.entity;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -25,11 +28,13 @@ public class Cita {
     @NotNull(message = "El cliente es obligatorio")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", nullable = false)
+    @JsonBackReference("cliente-citas")
     private Cliente cliente;
     
     @NotNull(message = "El servicio es obligatorio")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "servicio_id", nullable = false)
+    @JsonBackReference("servicio-citas")
     private Servicio servicio;
     
     @NotNull(message = "La fecha y hora son obligatorias")
@@ -65,9 +70,11 @@ public class Cita {
     private LocalDateTime fechaActualizacion;
     
     @OneToOne(mappedBy = "cita", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("cita-sesion")
     private Sesion sesion;
     
     @OneToOne(mappedBy = "cita", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference("cita-factura")
     private Factura factura;
 
     public Cita() {}

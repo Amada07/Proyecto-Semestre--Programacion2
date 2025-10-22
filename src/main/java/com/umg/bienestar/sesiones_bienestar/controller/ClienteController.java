@@ -52,13 +52,13 @@ public class ClienteController {
     public ResponseEntity<Cliente> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(clienteService.obtenerPorId(id));
     }
-
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar datos del cliente", description = "UC-10: Permite editar datos de un cliente")
     public ResponseEntity<Cliente> actualizar(@PathVariable Long id, @Valid @RequestBody ClienteDTO clienteDTO) {
         return ResponseEntity.ok(clienteService.actualizar(id, clienteDTO));
     }
-
+    
+  
     @PatchMapping("/{id}/desactivar")
     @Operation(summary = "Desactivar cliente", description = "UC-11: Desactiva un cliente del sistema")
     public ResponseEntity<Void> desactivar(@PathVariable Long id) {

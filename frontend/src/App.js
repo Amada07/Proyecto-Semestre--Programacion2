@@ -131,8 +131,8 @@ const Login = ({ onLogin }) => {
     </div>
   );
 };
-  // ============================================
-// COMPONENTE DE GESTIÓN DE CLIENTES
+ // ============================================
+// COMPONENTE DE GESTIÓN DE CLIENTES 
 // ============================================
 const Clientes = ({ token }) => {
   const [clientes, setClientes] = useState([]);
@@ -151,8 +151,10 @@ const Clientes = ({ token }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
+  if (token) {
     fetchClientes();
-  }, []);
+  }
+}, [token]);
 
   const fetchClientes = async () => {
     setLoading(true);
@@ -162,7 +164,20 @@ const Clientes = ({ token }) => {
       });
       if (response.ok) {
         const data = await response.json();
-        setClientes(data);
+        console.log('=== CLIENTES OBTENIDOS ===', data);
+        // Mapear los datos si vienen con nombres diferentes
+        const clientesMapeados = data.map(cliente => ({
+          id: cliente.id,
+          nombre: cliente.nombreCompleto || cliente.nombre,
+          email: cliente.email || cliente.username,
+          telefono: cliente.telefono,
+          direccion: cliente.direccion,
+          dpi: cliente.dpi,
+          fechaNacimiento: cliente.fechaNacimiento
+        }));
+        setClientes(clientesMapeados);
+      } else {
+        console.error('Error en respuesta:', response.status);
       }
     } catch (err) {
       console.error('Error al obtener clientes:', err);
@@ -209,53 +224,61 @@ const Clientes = ({ token }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-     if (!validateForm()) return;
-  setLoading(true);
+    if (!validateForm()) return;
+    setLoading(true);
 
-  const url = editingId 
-    ? `${API_URL}/clientes/${editingId}` 
-    : `${API_URL}/clientes/registro`;
-  
-  const method = editingId ? 'PUT' : 'POST';
-  const payload = {
-    username: formData.email.split('@')[0],         // genera usuario a partir del email
-    password: '12345678',                           // contraseña temporal (8 min caracteres)
-    email: formData.email.trim(),
-    nombreCompleto: formData.nombre.trim(),
-    dpi: formData.dpi.trim(),
-    telefono: formData.telefono.trim(),
-    direccion: formData.direccion.trim(),
-    fechaNacimiento: formData.fechaNacimiento || '2000-01-01'
-  };
+    const url = editingId 
+      ? `${API_URL}/clientes/${editingId}` 
+      : `${API_URL}/clientes/registro`;
+    
+    const method = editingId ? 'PUT' : 'POST';
+    const payload = {
+      username: formData.email.split('@')[0],
+      password: '12345678',
+      email: formData.email.trim(),
+      nombreCompleto: formData.nombre.trim(),
+      dpi: formData.dpi.trim(),
+      telefono: formData.telefono.trim(),
+      direccion: formData.direccion.trim(),
+      fechaNacimiento: formData.fechaNacimiento || '2000-01-01'
+    };
 
-  console.log('=== DEBUG ClienteDTO enviado ===');
-  console.log(JSON.stringify(payload, null, 2));
+    console.log('=== DEBUG ClienteDTO enviado ===');
+    console.log(JSON.stringify(payload, null, 2));
 
-  try {
-    const response = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
 
-    if (response.ok) {
-      await fetchClientes();
-      resetForm();
-      alert(editingId ? 'Cliente actualizado exitosamente' : 'Cliente registrado exitosamente');
-    } else {
-      const error = await response.json();
-      alert(error.message || 'Error al guardar cliente');
+      if (response.ok) {
+        const respuestaData = await response.json();
+        console.log('=== RESPUESTA DEL SERVIDOR ===', respuestaData);
+        
+        // Esperar un pequeño delay y luego refrescar
+        setTimeout(() => {
+          fetchClientes();
+        }, 500);
+        
+        resetForm();
+        alert(editingId ? 'Cliente actualizado exitosamente' : 'Cliente registrado exitosamente');
+      } else {
+        const error = await response.json();
+        console.error('Error respuesta:', error);
+        alert(error.message || 'Error al guardar cliente');
+      }
+    } catch (err) {
+      console.error('Error al guardar cliente:', err);
+      alert('Error al guardar cliente. Intente nuevamente.');
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error('Error al guardar cliente:', err);
-    alert('Error al guardar cliente. Intente nuevamente.');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleEdit = (cliente) => {
     setFormData({
@@ -541,9 +564,11 @@ const Citas = ({ token }) => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
+   useEffect(() => {
+  if (token) {
     cargarDatos();
-  }, []);
+  }
+}, [token]);
 
   const cargarDatos = async () => {
     await Promise.all([
@@ -1073,9 +1098,11 @@ const Servicios = ({ token }) => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
+   useEffect(() => {
+  if (token) {
     fetchServicios();
-  }, []);
+  }
+}, [token]);
 
   const fetchServicios = async () => {
     setLoading(true);
@@ -1145,20 +1172,20 @@ const Servicios = ({ token }) => {
       codigo: formData.codigo.trim(),
       nombre: formData.nombre.trim(),
       descripcion: formData.descripcion.trim(),
-      precio: formData.precio.toString(),
-      duracionMinutos: parseInt(formData.duracionMinutos, 10),
-      maxConcurrentes: parseInt(formData.maxConcurrentes, 10),
+      precio: parseFloat(formData.precio),
+      duracion: parseInt(formData.duracionMinutos, 10),  
+      cupoMaximo: parseInt(formData.maxConcurrentes, 10),
       activo: true
     };
 
     console.log('=== DEBUG PAYLOAD ===');
     console.log('FormData original:', formData);
     console.log('Payload procesado:', payload);
-    console.log('duracionMinutos:', payload.duracionMinutos, 'tipo:', typeof payload.duracionMinutos);
-    console.log('maxConcurrentes:', payload.maxConcurrentes, 'tipo:', typeof payload.maxConcurrentes);
+    console.log('duracion:', payload.duracion, 'tipo:', typeof payload.duracion);
+    console.log('cupoMaximo:', payload.cupoMaximo, 'tipo:', typeof payload.cupoMaximo);
 
     // Validar que no haya NaN
-    if (isNaN(payload.precio) || isNaN(payload.duracionMinutos) || isNaN(payload.maxConcurrentes)) {
+    if (isNaN(payload.precio) || isNaN(payload.duracion) || isNaN(payload.cupoMaximo)) {
       console.error('ERROR: Valores numéricos inválidos');
       alert('Error: Verifique que todos los campos numéricos estén llenos correctamente');
       setLoading(false);
@@ -1482,16 +1509,906 @@ const Servicios = ({ token }) => {
 };
 
 // ============================================
+// COMPONENTE DE GESTIÓN DE FACTURAS (UC-W05, UC-W08)
+// ============================================
+const Facturas = ({ token }) => {
+  const [facturas, setFacturas] = useState([]);
+  const [citas, setCitas] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    citaId: '',
+    observaciones: ''
+  });
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+  if (token) {
+    fetchFacturas();
+    fetchCitasAtendidas();
+  }
+}, [token]);
+
+  const fetchFacturas = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/facturas`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setFacturas(data);
+      }
+    } catch (err) {
+      console.error('Error al obtener facturas:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCitasAtendidas = async () => {
+    try {
+      const response = await fetch(`${API_URL}/citas?estado=ATENDIDA`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // Filtrar solo citas que NO tienen factura
+        const citasSinFactura = data.filter(cita => {
+          return !facturas.some(factura => factura.citaId === cita.id);
+        });
+        setCitas(citasSinFactura);
+      }
+    } catch (err) {
+      console.error('Error al obtener citas:', err);
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.citaId) {
+      newErrors.citaId = 'Debe seleccionar una cita';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/facturas`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          citaId: parseInt(formData.citaId),
+          observaciones: formData.observaciones.trim()
+        })
+      });
+
+      if (response.ok) {
+        await fetchFacturas();
+        await fetchCitasAtendidas();
+        resetForm();
+        alert('Factura generada exitosamente');
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Error al generar factura');
+      }
+    } catch (err) {
+      console.error('Error al generar factura:', err);
+      alert('Error al generar factura. Intente nuevamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDescargar = (facturaId) => {
+    // Simulación de descarga
+    alert(`Descargando factura #${facturaId} (función en desarrollo)`);
+    // En producción, esto generaría un PDF
+  };
+
+  const resetForm = () => {
+    setFormData({ citaId: '', observaciones: '' });
+    setShowForm(false);
+    setErrors({});
+  };
+
+  const filteredFacturas = facturas.filter(factura =>
+    factura.numeroFactura?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    factura.clienteNombre?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const formatFecha = (fechaStr) => {
+    try {
+      const fecha = new Date(fechaStr);
+      return fecha.toLocaleDateString('es-GT', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    } catch {
+      return fechaStr;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">Gestión de Facturas</h2>
+          <p className="text-gray-600 text-sm">UC-W05: Generar Factura</p>
+        </div>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white px-6 py-2 rounded-lg font-medium transition transform hover:scale-105"
+        >
+          {showForm ? 'Cancelar' : '+ Nueva Factura'}
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-green-500">
+          <h3 className="text-xl font-semibold mb-4 text-gray-800">
+            Generar Nueva Factura
+          </h3>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Cita a Facturar *
+              </label>
+              <select
+                value={formData.citaId}
+                onChange={(e) => setFormData({...formData, citaId: e.target.value})}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 ${
+                  errors.citaId ? 'border-red-500' : 'border-gray-300'
+                }`}
+              >
+                <option value="">Seleccione una cita atendida</option>
+                {citas.map((cita) => (
+                  <option key={cita.id} value={cita.id}>
+                    {cita.clienteNombre} - {cita.servicioNombre} - {formatFecha(cita.fechaHora)}
+                  </option>
+                ))}
+              </select>
+              {errors.citaId && (
+                <p className="text-red-500 text-xs mt-1">{errors.citaId}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Observaciones (opcional)
+              </label>
+              <textarea
+                value={formData.observaciones}
+                onChange={(e) => setFormData({...formData, observaciones: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                placeholder="Notas adicionales..."
+                rows="3"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition flex items-center gap-2 disabled:opacity-50"
+              >
+                <FileText size={18} />
+                Generar Factura
+              </button>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition"
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="bg-white rounded-lg shadow-lg">
+        <div className="p-4 border-b">
+          <input
+            type="text"
+            placeholder="Buscar por número de factura o cliente..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+          />
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Número</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Servicio</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Monto</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                    Cargando facturas...
+                  </td>
+                </tr>
+              ) : filteredFacturas.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                    No hay facturas registradas
+                  </td>
+                </tr>
+              ) : (
+                filteredFacturas.map((factura) => (
+                  <tr key={factura.id} className="hover:bg-gray-50 transition">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      #{factura.numeroFactura}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {factura.clienteNombre || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {factura.servicioNombre || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
+                      Q {factura.monto?.toFixed(2) || '0.00'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {formatFecha(factura.fechaEmision)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        factura.estado === 'PAGADA' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {factura.estado}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => handleDescargar(factura.id)}
+                        className="text-blue-600 hover:text-blue-900 inline-flex items-center gap-1"
+                      >
+                        <Eye size={16} />
+                        Ver/Descargar
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// COMPONENTE DE HISTORIAL DE SESIONES (UC-W04)
+// ============================================
+const HistorialSesiones = ({ token }) => {
+  const [historial, setHistorial] = useState([]);
+  const [clientes, setClientes] = useState([]);
+  const [servicios, setServicios] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [filtros, setFiltros] = useState({
+    clienteId: '',
+    servicioId: '',
+    estado: '',
+    fechaInicio: '',
+    fechaFin: ''
+  });
+
+    useEffect(() => {
+  if (token) {
+    fetchClientes();
+    fetchServicios();
+    fetchHistorial();
+  }
+}, [token]);
+
+  const fetchClientes = async () => {
+    try {
+      const response = await fetch(`${API_URL}/clientes`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setClientes(data);
+      }
+    } catch (err) {
+      console.error('Error al obtener clientes:', err);
+    }
+  };
+
+  const fetchServicios = async () => {
+    try {
+      const response = await fetch(`${API_URL}/servicios`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setServicios(data);
+      }
+    } catch (err) {
+      console.error('Error al obtener servicios:', err);
+    }
+  };
+
+  const fetchHistorial = async () => {
+    setLoading(true);
+    try {
+      let url = `${API_URL}/citas`;
+      const params = new URLSearchParams();
+      
+      if (filtros.clienteId) params.append('clienteId', filtros.clienteId);
+      if (filtros.servicioId) params.append('servicioId', filtros.servicioId);
+      if (filtros.estado) params.append('estado', filtros.estado);
+      if (filtros.fechaInicio) params.append('fechaInicio', filtros.fechaInicio);
+      if (filtros.fechaFin) params.append('fechaFin', filtros.fechaFin);
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const response = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setHistorial(data);
+      }
+    } catch (err) {
+      console.error('Error al obtener historial:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBuscar = (e) => {
+    e.preventDefault();
+    fetchHistorial();
+  };
+
+  const handleLimpiarFiltros = () => {
+    setFiltros({
+      clienteId: '',
+      servicioId: '',
+      estado: '',
+      fechaInicio: '',
+      fechaFin: ''
+    });
+    setTimeout(() => fetchHistorial(), 100);
+  };
+
+  const exportarCSV = () => {
+    if (historial.length === 0) {
+      alert('No hay datos para exportar');
+      return;
+    }
+
+    const headers = ['ID', 'Cliente', 'Servicio', 'Fecha/Hora', 'Estado', 'Observaciones'];
+    const rows = historial.map(cita => [
+      cita.id,
+      cita.clienteNombre,
+      cita.servicioNombre,
+      formatFechaHora(cita.fechaHora),
+      cita.estado,
+      cita.observaciones || ''
+    ]);
+
+    let csvContent = headers.join(',') + '\n';
+    rows.forEach(row => {
+      csvContent += row.map(cell => `"${cell}"`).join(',') + '\n';
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `historial_sesiones_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
+
+  const formatFechaHora = (fechaStr) => {
+    try {
+      const fecha = new Date(fechaStr);
+      return fecha.toLocaleString('es-GT', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return fechaStr;
+    }
+  };
+
+  const getEstadoColor = (estado) => {
+    switch (estado) {
+      case 'CONFIRMADA':
+        return 'bg-blue-100 text-blue-800';
+      case 'PENDIENTE':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'ATENDIDA':
+        return 'bg-green-100 text-green-800';
+      case 'CANCELADA':
+      case 'RECHAZADA':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">Historial de Sesiones</h2>
+          <p className="text-gray-600 text-sm">UC-W04: Consultar Historial de Sesiones</p>
+        </div>
+        <button
+          onClick={exportarCSV}
+          className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition transform hover:scale-105 flex items-center gap-2"
+        >
+          <BarChart3 size={18} />
+          Exportar CSV
+        </button>
+      </div>
+
+      {/* Filtros */}
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <h3 className="text-lg font-semibold mb-4 text-gray-800">Filtros de Búsqueda</h3>
+        <form onSubmit={handleBuscar} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Cliente
+            </label>
+            <select
+              value={filtros.clienteId}
+              onChange={(e) => setFiltros({...filtros, clienteId: e.target.value})}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="">Todos los clientes</option>
+              {clientes.map((cliente) => (
+                <option key={cliente.id} value={cliente.id}>
+                  {cliente.nombreCompleto}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Servicio
+            </label>
+            <select
+              value={filtros.servicioId}
+              onChange={(e) => setFiltros({...filtros, servicioId: e.target.value})}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="">Todos los servicios</option>
+              {servicios.map((servicio) => (
+                <option key={servicio.id} value={servicio.id}>
+                  {servicio.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Estado
+            </label>
+            <select
+              value={filtros.estado}
+              onChange={(e) => setFiltros({...filtros, estado: e.target.value})}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="">Todos los estados</option>
+              <option value="PENDIENTE">Pendiente</option>
+              <option value="CONFIRMADA">Confirmada</option>
+              <option value="ATENDIDA">Atendida</option>
+              <option value="CANCELADA">Cancelada</option>
+              <option value="RECHAZADA">Rechazada</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Fecha Inicio
+            </label>
+            <input
+              type="date"
+              value={filtros.fechaInicio}
+              onChange={(e) => setFiltros({...filtros, fechaInicio: e.target.value})}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Fecha Fin
+            </label>
+            <input
+              type="date"
+              value={filtros.fechaFin}
+              onChange={(e) => setFiltros({...filtros, fechaFin: e.target.value})}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
+
+          <div className="flex items-end gap-2">
+            <button
+              type="submit"
+              className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition"
+            >
+              Buscar
+            </button>
+            <button
+              type="button"
+              onClick={handleLimpiarFiltros}
+              className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition"
+            >
+              Limpiar
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Tabla de Historial */}
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Servicio</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha/Hora</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Observaciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                    Cargando historial...
+                  </td>
+                </tr>
+              ) : historial.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                    No se encontraron sesiones con los filtros aplicados
+                  </td>
+                </tr>
+              ) : (
+                historial.map((cita) => (
+                  <tr key={cita.id} className="hover:bg-gray-50 transition">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      #{cita.id}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {cita.clienteNombre}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {cita.servicioNombre}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {formatFechaHora(cita.fechaHora)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getEstadoColor(cita.estado)}`}>
+                        {cita.estado}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
+                      {cita.observaciones || '-'}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Resumen */}
+        {historial.length > 0 && (
+          <div className="bg-gray-50 px-6 py-4 border-t">
+            <p className="text-sm text-gray-600">
+              <strong>Total de sesiones:</strong> {historial.length}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// COMPONENTE DE REPORTES (UC-W06)
+// ============================================
+const Reportes = ({ token }) => {
+  const [reportes, setReportes] = useState({
+    totalCitas: 0,
+    citasPendientes: 0,
+    citasConfirmadas: 0,
+    citasAtendidas: 0,
+    citasCanceladas: 0,
+    ingresosTotales: 0,
+    serviciosMasSolicitados: [],
+    clientesFrecuentes: []
+  });
+  const [loading, setLoading] = useState(false);
+  const [filtros, setFiltros] = useState({
+    fechaInicio: '',
+    fechaFin: ''
+  });
+
+  useEffect(() => {
+    // Establecer fechas por defecto (último mes)
+    const hoy = new Date();
+    const unMesAtras = new Date();
+    unMesAtras.setMonth(hoy.getMonth() - 1);
+    
+    setFiltros({
+      fechaInicio: unMesAtras.toISOString().split('T')[0],
+      fechaFin: hoy.toISOString().split('T')[0]
+    });
+  }, []);
+
+  useEffect(() => {
+    if (filtros.fechaInicio && filtros.fechaFin) {
+      fetchReportes();
+    }
+  }, [token, filtros]);
+
+  const fetchReportes = async () => {
+    setLoading(true);
+    try {
+      // Obtener citas
+      const citasResponse = await fetch(
+        `${API_URL}/citas?fechaInicio=${filtros.fechaInicio}&fechaFin=${filtros.fechaFin}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      
+      // Obtener facturas
+      const facturasResponse = await fetch(`${API_URL}/facturas`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (citasResponse.ok && facturasResponse.ok) {
+        const citas = await citasResponse.json();
+        const facturas = await facturasResponse.json();
+
+        // Calcular métricas
+        const totalCitas = citas.length;
+        const citasPendientes = citas.filter(c => c.estado === 'PENDIENTE').length;
+        const citasConfirmadas = citas.filter(c => c.estado === 'CONFIRMADA').length;
+        const citasAtendidas = citas.filter(c => c.estado === 'ATENDIDA').length;
+        const citasCanceladas = citas.filter(c => c.estado === 'CANCELADA' || c.estado === 'RECHAZADA').length;
+
+        // Calcular ingresos
+        const ingresosTotales = facturas
+          .filter(f => {
+            const fechaFactura = new Date(f.fechaEmision);
+            return fechaFactura >= new Date(filtros.fechaInicio) && 
+                   fechaFactura <= new Date(filtros.fechaFin);
+          })
+          .reduce((sum, f) => sum + (f.monto || 0), 0);
+
+        // Servicios más solicitados
+        const serviciosCont = {};
+        citas.forEach(cita => {
+          const key = cita.servicioNombre;
+          serviciosCont[key] = (serviciosCont[key] || 0) + 1;
+        });
+        const serviciosMasSolicitados = Object.entries(serviciosCont)
+          .map(([nombre, cantidad]) => ({ nombre, cantidad }))
+          .sort((a, b) => b.cantidad - a.cantidad)
+          .slice(0, 5);
+
+        // Clientes frecuentes
+        const clientesCont = {};
+        citas.forEach(cita => {
+          const key = cita.clienteNombre;
+          clientesCont[key] = (clientesCont[key] || 0) + 1;
+        });
+        const clientesFrecuentes = Object.entries(clientesCont)
+          .map(([nombre, cantidad]) => ({ nombre, cantidad }))
+          .sort((a, b) => b.cantidad - a.cantidad)
+          .slice(0, 5);
+
+        setReportes({
+          totalCitas,
+          citasPendientes,
+          citasConfirmadas,
+          citasAtendidas,
+          citasCanceladas,
+          ingresosTotales,
+          serviciosMasSolicitados,
+          clientesFrecuentes
+        });
+      }
+    } catch (err) {
+      console.error('Error al generar reportes:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const exportarPDF = () => {
+    alert('Exportación a PDF en desarrollo. Por ahora, usa la función de imprimir del navegador.');
+    window.print();
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">Reportes Generales</h2>
+          <p className="text-gray-600 text-sm">UC-W06: Generar Reporte General</p>
+        </div>
+        <button
+          onClick={exportarPDF}
+          className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-6 py-2 rounded-lg font-medium transition transform hover:scale-105 flex items-center gap-2"
+        >
+          <BarChart3 size={18} />
+          Exportar PDF
+        </button>
+      </div>
+
+      {/* Filtros de Fecha */}
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <h3 className="text-lg font-semibold mb-4 text-gray-800">Rango de Fechas</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Fecha Inicio
+            </label>
+            <input
+              type="date"
+              value={filtros.fechaInicio}
+              onChange={(e) => setFiltros({...filtros, fechaInicio: e.target.value})}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Fecha Fin
+            </label>
+            <input
+              type="date"
+              value={filtros.fechaFin}
+              onChange={(e) => setFiltros({...filtros, fechaFin: e.target.value})}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-12">
+          <p className="text-gray-600">Generando reportes...</p>
+        </div>
+      ) : (
+        <>
+          {/* Métricas Principales */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+              <h3 className="text-lg font-semibold mb-2">Total de Sesiones</h3>
+              <p className="text-4xl font-bold">{reportes.totalCitas}</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
+              <h3 className="text-lg font-semibold mb-2">Ingresos Totales</h3>
+              <p className="text-4xl font-bold">Q {reportes.ingresosTotales.toFixed(2)}</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
+              <h3 className="text-lg font-semibold mb-2">Sesiones Atendidas</h3>
+              <p className="text-4xl font-bold">{reportes.citasAtendidas}</p>
+            </div>
+          </div>
+
+          {/* Estados de Citas */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h3 className="text-xl font-semibold mb-4 text-gray-800">Estados de Sesiones</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                <p className="text-2xl font-bold text-yellow-600">{reportes.citasPendientes}</p>
+                <p className="text-sm text-gray-600">Pendientes</p>
+              </div>
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <p className="text-2xl font-bold text-blue-600">{reportes.citasConfirmadas}</p>
+                <p className="text-sm text-gray-600">Confirmadas</p>
+              </div>
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <p className="text-2xl font-bold text-green-600">{reportes.citasAtendidas}</p>
+                <p className="text-sm text-gray-600">Atendidas</p>
+              </div>
+              <div className="text-center p-4 bg-red-50 rounded-lg">
+                <p className="text-2xl font-bold text-red-600">{reportes.citasCanceladas}</p>
+                <p className="text-sm text-gray-600">Canceladas</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Servicios y Clientes */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Servicios Más Solicitados */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800">Top 5 Servicios</h3>
+              <div className="space-y-3">
+                {reportes.serviciosMasSolicitados.map((servicio, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <span className="text-gray-700">{servicio.nombre}</span>
+                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+                      {servicio.cantidad}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Clientes Frecuentes */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800">Top 5 Clientes</h3>
+              <div className="space-y-3">
+                {reportes.clientesFrecuentes.map((cliente, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <span className="text-gray-700">{cliente.nombre}</span>
+                    <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                      {cliente.cantidad} visitas
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+// ============================================
 // COMPONENTE PRINCIPAL APP
 // ============================================
-  const App = () => {
+const App = () => {
   const [token, setToken] = useState(null);
   const [usuario, setUsuario] = useState('');
   const [currentView, setCurrentView] = useState('clientes');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  //Carga token al iniciar 
-   useEffect(() => {
+  // Carga token al iniciar 
+  useEffect(() => {
     const savedToken = localStorage.getItem('token');
     const savedUsername = localStorage.getItem('username');
     
@@ -1503,23 +2420,27 @@ const Servicios = ({ token }) => {
   }, []);
 
   const handleLogin = (newToken, nombreUsuario) => {
-  console.log('=== LOGIN DEBUG ===');
-  console.log('Token recibido:', newToken);
-  console.log('Usuario:', nombreUsuario);
-  
-  // Guardar en estado de React
-  setToken(newToken);
-  setUsuario(nombreUsuario);
-  
-  // Guardar en localStorage para persistencia
-  localStorage.setItem('token', newToken);
-  localStorage.setItem('username', nombreUsuario);
-  
-  console.log('Token guardado en localStorage');
-};
+    console.log('=== LOGIN DEBUG ===');
+    console.log('Token recibido:', newToken);
+    console.log('Usuario:', nombreUsuario);
+    
+    // ✅ GUARDAR EN localStorage PRIMERO
+    localStorage.setItem('token', newToken);
+    localStorage.setItem('username', nombreUsuario);
+    
+    console.log('Token guardado en localStorage');
+    
+    // LUEGO actualizar estado de React
+    setToken(newToken);
+    setUsuario(nombreUsuario);
+  };
 
   const handleLogout = () => {
     if (window.confirm('¿Está seguro de cerrar sesión?')) {
+      // Limpiar localStorage también
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      
       setToken(null);
       setUsuario('');
       setCurrentView('clientes');
@@ -1533,8 +2454,10 @@ const Servicios = ({ token }) => {
   const menuItems = [
     { id: 'clientes', label: 'Clientes', icon: Users },
     { id: 'servicios', label: 'Servicios', icon: Package},
-    { id: 'citas', label: 'Citas', icon: Calendar }
-   
+    { id: 'citas', label: 'Citas', icon: Calendar },
+    { id: 'facturas', label: 'Facturas', icon: FileText },
+    { id: 'historial', label: 'Historial', icon: Clock }, 
+    { id: 'reportes', label: 'Reportes', icon: BarChart3 }
   ];
 
   return (
@@ -1602,10 +2525,13 @@ const Servicios = ({ token }) => {
           {currentView === 'clientes' && <Clientes token={token} />}
           {currentView === 'servicios' && <Servicios token={token} />}
           {currentView === 'citas' && <Citas token={token} />}
+          {currentView === 'facturas' && <Facturas token={token} />} 
+          {currentView === 'historial' && <HistorialSesiones token={token} />}
+          {currentView === 'reportes' && <Reportes token={token} />} 
         </div>
       </div>
     </div>
   );
- };
+};
 
 export default App;
