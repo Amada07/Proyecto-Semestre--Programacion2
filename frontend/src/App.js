@@ -564,11 +564,11 @@ const Citas = ({ token }) => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-   useEffect(() => {
-  if (token) {
-    cargarDatos();
-  }
-}, [token]);
+  useEffect(() => {
+    if (token) {
+      cargarDatos();
+    }
+  }, [token]);
 
   const cargarDatos = async () => {
     await Promise.all([
@@ -763,8 +763,45 @@ const Citas = ({ token }) => {
     }
   };
 
+  //  Marcar cita como atendida
+  const marcarAtendida = async (citaId) => {
+  console.log('=== DEBUG MARCAR ATENDIDA ===');
+  console.log('citaId recibido:', citaId);
+  console.log('tipo:', typeof citaId);
+  console.log('URL que se va a llamar:', `${API_URL}/citas/${citaId}/atender`);
+  
+  if (!window.confirm('¿Marcar esta cita como atendida?')) return;
+
+  setLoading(true);
+  try {
+    const url = `${API_URL}/citas/${citaId}/atender`;
+    console.log('URL final antes de fetch:', url);
+    
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    console.log('Response status:', response.status);
+
+    if (response.ok) {
+      alert('Cita marcada como atendida exitosamente');
+      await cargarDatos();
+    } else {
+      console.error('Error response:', await response.text());
+      alert('Error al marcar cita como atendida');
+    }
+  } catch (err) {
+    console.error('Error completo:', err);
+    alert('Error al marcar cita como atendida');
+  } finally {
+    setLoading(false);
+  }
+};
+
   const cancelarCita = async (citaId) => {
-    // UC-04: Validar que falten al menos 24 horas
     const cita = citas.find(c => c.id === citaId);
     if (cita) {
       const fechaCita = new Date(cita.fechaHora);
@@ -778,11 +815,15 @@ const Citas = ({ token }) => {
       }
     }
 
-    if (!window.confirm('¿Cancelar esta cita?')) return;
+    const motivo = window.prompt('¿Por qué deseas cancelar esta cita?');
+    if (!motivo || motivo.trim() === '') {
+      alert('Debes proporcionar un motivo para cancelar la cita');
+      return;
+    }
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/citas/${citaId}/cancelar`, {
+      const response = await fetch(`${API_URL}/citas/${citaId}/cancelar?motivo=${encodeURIComponent(motivo)}`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -867,7 +908,6 @@ const Citas = ({ token }) => {
         </button>
       </div>
 
-      {/* Formulario Nueva Cita */}
       {showForm && (
         <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500">
           <h3 className="text-xl font-semibold mb-4">Nueva Cita</h3>
@@ -964,7 +1004,6 @@ const Citas = ({ token }) => {
         </div>
       )}
 
-      {/* Tabs */}
       <div className="flex gap-2 border-b">
         <button
           onClick={() => setActiveTab('mis-citas')}
@@ -988,7 +1027,6 @@ const Citas = ({ token }) => {
         </button>
       </div>
 
-      {/* Búsqueda */}
       <input
         type="text"
         placeholder="Buscar por cliente..."
@@ -997,7 +1035,6 @@ const Citas = ({ token }) => {
         className="w-full px-4 py-2 border border-gray-300 rounded-lg"
       />
 
-      {/* Mis Citas */}
       {activeTab === 'mis-citas' && (
         <div className="space-y-3">
           {filteredCitas.length === 0 ? (
@@ -1018,14 +1055,24 @@ const Citas = ({ token }) => {
                 {cita.notas && (
                   <p className="text-sm text-gray-600 mb-3"> {cita.notas}</p>
                 )}
-                {(cita.estado === 'PENDIENTE' || cita.estado === 'CONFIRMADA') && (
-                  <button
-                    onClick={() => cancelarCita(cita.id)}
-                    disabled={loading}
-                    className="text-red-600 hover:text-red-900 text-sm font-medium disabled:opacity-50"
-                  >
-                    Cancelar Cita
-                  </button>
+                {cita.estado === 'CONFIRMADA' && (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => marcarAtendida(cita.id)}
+                      disabled={loading}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50 inline-flex items-center gap-2"
+                    >
+                      <CheckCircle size={16} />
+                      Marcar como Atendida
+                    </button>
+                    <button
+                      onClick={() => cancelarCita(cita.id)}
+                      disabled={loading}
+                      className="text-red-600 hover:text-red-900 text-sm font-medium disabled:opacity-50"
+                    >
+                      Cancelar Cita
+                    </button>
+                  </div>
                 )}
               </div>
             ))
@@ -1033,7 +1080,6 @@ const Citas = ({ token }) => {
         </div>
       )}
 
-      {/* Solicitudes */}
       {activeTab === 'solicitudes' && (
         <div className="space-y-3">
           {filteredSolicitudes.length === 0 ? (
@@ -1052,7 +1098,7 @@ const Citas = ({ token }) => {
                 </div>
                 <p className="text-sm text-gray-600 mb-3"> {formatearFechaHora(cita.fechaHora)}</p>
                 {cita.notas && (
-                  <p className="text-sm text-gray-600 mb-3">{cita.notas}</p>
+                  <p className="text-sm text-gray-600 mb-3"> {cita.notas}</p>
                 )}
                 <div className="flex gap-3">
                   <button
@@ -1168,29 +1214,31 @@ const Servicios = ({ token }) => {
     
     const method = editingId ? 'PUT' : 'POST';
 
-    const payload = {
-      codigo: formData.codigo.trim(),
-      nombre: formData.nombre.trim(),
-      descripcion: formData.descripcion.trim(),
-      precio: parseFloat(formData.precio),
-      duracion: parseInt(formData.duracionMinutos, 10),  
-      cupoMaximo: parseInt(formData.maxConcurrentes, 10),
-      activo: true
-    };
+    const payload = editingId 
+      ? {
+          // Para UPDATE - usar nombres de la entidad
+          codigo: formData.codigo.trim(),
+          nombre: formData.nombre.trim(),
+          descripcion: formData.descripcion.trim(),
+          precio: parseFloat(formData.precio),
+          duracionMinutos: parseInt(formData.duracionMinutos, 10),  
+          maxConcurrentes: parseInt(formData.maxConcurrentes, 10),  
+          activo: true
+        }
+      : {
+          // Para CREATE - usar nombres del DTO (ServicioRequest)
+          codigo: formData.codigo.trim(),
+          nombre: formData.nombre.trim(),
+          descripcion: formData.descripcion.trim(),
+          precio: parseFloat(formData.precio),
+          duracion: parseInt(formData.duracionMinutos, 10),
+          cupoMaximo: parseInt(formData.maxConcurrentes, 10),
+          activo: true
+        };
 
     console.log('=== DEBUG PAYLOAD ===');
-    console.log('FormData original:', formData);
-    console.log('Payload procesado:', payload);
-    console.log('duracion:', payload.duracion, 'tipo:', typeof payload.duracion);
-    console.log('cupoMaximo:', payload.cupoMaximo, 'tipo:', typeof payload.cupoMaximo);
-
-    // Validar que no haya NaN
-    if (isNaN(payload.precio) || isNaN(payload.duracion) || isNaN(payload.cupoMaximo)) {
-      console.error('ERROR: Valores numéricos inválidos');
-      alert('Error: Verifique que todos los campos numéricos estén llenos correctamente');
-      setLoading(false);
-      return;
-    }
+    console.log('Editando:', editingId ? 'Sí' : 'No');
+    console.log('Payload:', payload);
 
     try {
       const response = await fetch(url, {
@@ -1548,22 +1596,22 @@ const Facturas = ({ token }) => {
   };
 
   const fetchCitasAtendidas = async () => {
-    try {
-      const response = await fetch(`${API_URL}/citas?estado=ATENDIDA`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+  try {
+    const response = await fetch(`${API_URL}/citas?estado=ATENDIDA`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (response.ok) {
+      const data = await response.json();
+      // Filtrar solo citas que NO tienen factura
+      const citasSinFactura = data.filter(cita => {
+        return !facturas.some(factura => factura.cita.id === cita.id); 
       });
-      if (response.ok) {
-        const data = await response.json();
-        // Filtrar solo citas que NO tienen factura
-        const citasSinFactura = data.filter(cita => {
-          return !facturas.some(factura => factura.citaId === cita.id);
-        });
-        setCitas(citasSinFactura);
-      }
-    } catch (err) {
-      console.error('Error al obtener citas:', err);
+      setCitas(citasSinFactura);
     }
-  };
+  } catch (err) {
+    console.error('Error al obtener citas:', err);
+  }
+};
 
   const validateForm = () => {
     const newErrors = {};
@@ -1822,13 +1870,13 @@ const HistorialSesiones = ({ token }) => {
     fechaFin: ''
   });
 
-    useEffect(() => {
-  if (token) {
-    fetchClientes();
-    fetchServicios();
-    fetchHistorial();
-  }
-}, [token]);
+  useEffect(() => {
+    if (token) {
+      fetchClientes();
+      fetchServicios();
+      fetchHistorial();
+    }
+  }, [token]);
 
   const fetchClientes = async () => {
     try {
@@ -1861,7 +1909,7 @@ const HistorialSesiones = ({ token }) => {
   const fetchHistorial = async () => {
     setLoading(true);
     try {
-      let url = `${API_URL}/citas`;
+      let url = `${API_URL}/sesiones`;
       const params = new URLSearchParams();
       
       if (filtros.clienteId) params.append('clienteId', filtros.clienteId);
@@ -1912,13 +1960,13 @@ const HistorialSesiones = ({ token }) => {
     }
 
     const headers = ['ID', 'Cliente', 'Servicio', 'Fecha/Hora', 'Estado', 'Observaciones'];
-    const rows = historial.map(cita => [
-      cita.id,
-      cita.clienteNombre,
-      cita.servicioNombre,
-      formatFechaHora(cita.fechaHora),
-      cita.estado,
-      cita.observaciones || ''
+    const rows = historial.map(sesion => [
+      sesion.id,
+      sesion.clienteNombre,
+      sesion.servicioNombre,
+      formatFechaHora(sesion.fechaInicio),
+      sesion.citaEstado,
+      sesion.observaciones || ''
     ]);
 
     let csvContent = headers.join(',') + '\n';
@@ -2109,27 +2157,27 @@ const HistorialSesiones = ({ token }) => {
                   </td>
                 </tr>
               ) : (
-                historial.map((cita) => (
-                  <tr key={cita.id} className="hover:bg-gray-50 transition">
+                historial.map((sesion) => (
+                  <tr key={sesion.id} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      #{cita.id}
+                      #{sesion.id}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {cita.clienteNombre}
+                      {sesion.clienteNombre}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {cita.servicioNombre}
+                      {sesion.servicioNombre}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {formatFechaHora(cita.fechaHora)}
+                      {formatFechaHora(sesion.fechaInicio)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getEstadoColor(cita.estado)}`}>
-                        {cita.estado}
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getEstadoColor(sesion.citaEstado)}`}>
+                        {sesion.citaEstado}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
-                      {cita.observaciones || '-'}
+                      {sesion.observaciones || '-'}
                     </td>
                   </tr>
                 ))
@@ -2424,7 +2472,7 @@ const App = () => {
     console.log('Token recibido:', newToken);
     console.log('Usuario:', nombreUsuario);
     
-    // ✅ GUARDAR EN localStorage PRIMERO
+    //  GUARDAR EN localStorage PRIMERO
     localStorage.setItem('token', newToken);
     localStorage.setItem('username', nombreUsuario);
     

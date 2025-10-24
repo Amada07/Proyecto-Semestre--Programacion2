@@ -85,7 +85,11 @@ public class FacturaService {
         return facturaRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Factura no encontrada con ID: " + id));
     }
-
+    
+      public List<Factura> listarTodas() {
+        return facturaRepository.findAll();
+    }
+      
     public List<Factura> listarPorCliente(Long clienteId) {
         return facturaRepository.findByClienteId(clienteId);
     }
@@ -113,7 +117,7 @@ public class FacturaService {
         
         return pagada;
     }
-
+    
     public Double calcularIngresos(LocalDateTime inicio, LocalDateTime fin) {
         Double ingresos = facturaRepository.calcularIngresosPeriodo(inicio, fin);
         return ingresos != null ? ingresos : 0.0;

@@ -15,8 +15,11 @@ import com.umg.bienestar.sesiones_bienestar.util.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -26,7 +29,7 @@ import java.util.List;
 @Service
 @Transactional
 public class SesionService {
-
+    
     @Autowired
     private SesionRepository sesionRepository;
     
@@ -35,7 +38,7 @@ public class SesionService {
     
     @Autowired
     private AuditoriaService auditoriaService;
-
+    
     public Sesion iniciar(Long citaId) {
         Cita cita = citaRepository.findById(citaId)
             .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada"));
@@ -63,7 +66,7 @@ public class SesionService {
         
         return guardada;
     }
-
+    
     public Sesion finalizar(Long sesionId, String observaciones) {
         Sesion sesion = obtenerPorId(sesionId);
         
@@ -91,17 +94,70 @@ public class SesionService {
         
         return sesion;
     }
-
+    
     public Sesion obtenerPorId(Long id) {
         return sesionRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Sesión no encontrada con ID: " + id));
     }
-
+    
     public List<Sesion> listarPorCliente(Long clienteId) {
         return sesionRepository.findByClienteId(clienteId);
     }
-
+    
     public List<Sesion> listarPorPeriodo(LocalDateTime inicio, LocalDateTime fin) {
         return sesionRepository.findByFechaBetween(inicio, fin);
+    }
+    
+    // ========================================
+    // NUEVO MÉTODO PARA FILTROS
+    // ========================================
+    public List<Sesion> listarConFiltros(Long clienteId, Long servicioId, String estado, LocalDate fechaInicio, LocalDate fechaFin) {
+        // Obtener todas las sesiones
+        List<Sesion> sesiones = sesionRepository.findAll();
+        
+        // Aplicar filtros manualmente
+        return sesiones.stream()
+            .filter(sesion -> {
+                // Filtro por cliente
+                if (clienteId != null && !sesion.getCita().getCliente().getId().equals(clienteId)) {
+                    return false;
+                }
+                
+                // Filtro por servicio
+                if (servicioId != null && !sesion.getCita().getServicio().getId().equals(servicioId)) {
+                    return false;
+                }
+                
+                // Filtro por estado (de la cita asociada)
+                if (estado != null && !estado.isEmpty()) {
+                    try {
+                        EstadoCita estadoCita = EstadoCita.valueOf(estado.toUpperCase());
+                        if (!sesion.getCita().getEstado().equals(estadoCita)) {
+                            return false;
+                        }
+                    } catch (IllegalArgumentException e) {
+                        return false;
+                    }
+                }
+                
+                // Filtro por fecha inicio
+                if (fechaInicio != null) {
+                    LocalDateTime inicioDateTime = fechaInicio.atStartOfDay();
+                    if (sesion.getFechaInicio().isBefore(inicioDateTime)) {
+                        return false;
+                    }
+                }
+                
+                // Filtro por fecha fin
+                if (fechaFin != null) {
+                    LocalDateTime finDateTime = fechaFin.atTime(LocalTime.MAX);
+                    if (sesion.getFechaInicio().isAfter(finDateTime)) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            })
+            .collect(Collectors.toList());
     }
 }

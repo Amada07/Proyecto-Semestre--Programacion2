@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.umg.bienestar.sesiones_bienestar.controller;
 
 import com.umg.bienestar.sesiones_bienestar.dto.CitaDTO;
@@ -31,7 +27,27 @@ public class CitaController {
 
     @Autowired
     private CitaService citaService;
-
+    
+      @GetMapping
+    @Operation(summary = "Listar todas las citas o filtrar por estado")
+    public ResponseEntity<List<CitaDTO>> listar(
+        @RequestParam(required = false) EstadoCita estado
+    ) {
+        List<Cita> citas;
+        
+        if (estado != null) {
+            citas = citaService.listarPorEstado(estado);
+        } else {
+            citas = citaService.listarTodas();
+        }
+        
+        List<CitaDTO> citasDTO = citas.stream()
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(citasDTO);
+    }
+    
     @PostMapping
     @Operation(summary = "Agendar nueva cita", description = "UC-W03/UC-M04: Agendar cita o sesión")
     public ResponseEntity<CitaDTO> agendar(@Valid @RequestBody CitaDTO citaDTO) {
@@ -58,10 +74,19 @@ public class CitaController {
         return ResponseEntity.ok(convertirADTO(cita));
     }
 
+    
     @PatchMapping("/{id}/cancelar")
     @Operation(summary = "Cancelar cita", description = "UC-W04: Cancelar cita/sesión")
-    public ResponseEntity<CitaDTO> cancelar(@PathVariable Long id) {
-        Cita cita = citaService.cancelar(id);
+    public ResponseEntity<CitaDTO> cancelar(@PathVariable Long id, @RequestParam String motivo) {
+        Cita cita = citaService.cancelar(id, motivo);
+        return ResponseEntity.ok(convertirADTO(cita));
+    }
+
+ 
+    @PatchMapping("/{id}/atender")
+    @Operation(summary = "Marcar cita como atendida", description = "Cambiar estado de cita a ATENDIDA")
+    public ResponseEntity<CitaDTO> marcarComoAtendida(@PathVariable Long id) {
+        Cita cita = citaService.marcarComoAtendida(id);
         return ResponseEntity.ok(convertirADTO(cita));
     }
     

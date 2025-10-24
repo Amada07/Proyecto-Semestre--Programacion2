@@ -120,7 +120,8 @@ public class CitaService {
         return rechazada;
     }
 
-    public Cita cancelar(Long citaId) {
+   
+    public Cita cancelar(Long citaId, String motivo) {
         Cita cita = obtenerPorId(citaId);
         
         if (cita.getEstado() == EstadoCita.CANCELADA || cita.getEstado() == EstadoCita.ATENDIDA) {
@@ -136,6 +137,7 @@ public class CitaService {
         
         cita.setEstado(EstadoCita.CANCELADA);
         cita.setFechaCancelacion(ahora);
+        cita.setMotivoRechazo(motivo);  
         
         Cita cancelada = citaRepository.save(cita); 
         
@@ -146,12 +148,36 @@ public class CitaService {
             "CANCELAR",
             "CITA",
             cancelada.getId(),
-            "Cita cancelada para cliente " + cancelada.getCliente().getNombreCompleto()
+            "Cita cancelada - Motivo: " + motivo  
         );
         
         return cancelada; 
     }
-
+    
+    public Cita marcarComoAtendida(Long citaId) {
+        Cita cita = obtenerPorId(citaId);
+        
+        if (cita.getEstado() != EstadoCita.CONFIRMADA) {
+            throw new BusinessException("Solo se pueden marcar como atendidas las citas confirmadas");
+        }
+        
+        cita.setEstado(EstadoCita.ATENDIDA);
+        
+        Cita atendida = citaRepository.save(cita);
+        
+        auditoriaService.registrar(
+            SecurityUtils.getCurrentUserId(),
+            SecurityUtils.getCurrentUsername(),
+            SecurityUtils.getCurrentUserRol(),
+            "ATENDER",
+            "CITA",
+            atendida.getId(),
+            "Cita marcada como atendida para cliente " + atendida.getCliente().getNombreCompleto()
+        );
+        
+        return atendida;
+    }
+    
     public Cita obtenerPorId(Long id) {
         return citaRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Cita no encontrada con ID: " + id));
@@ -164,7 +190,11 @@ public class CitaService {
     public List<Cita> listarPorEstado(EstadoCita estado) {
         return citaRepository.findByEstado(estado);
     }
-
+    
+    public List<Cita> listarTodas() {
+    return citaRepository.findAll();
+}
+    
     public List<Cita> obtenerHistorialCliente(Long clienteId, LocalDateTime inicio, LocalDateTime fin) {
         return citaRepository.findHistorialCliente(clienteId, inicio, fin);
     }

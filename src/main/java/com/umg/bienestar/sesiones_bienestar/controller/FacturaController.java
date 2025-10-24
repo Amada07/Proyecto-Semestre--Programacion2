@@ -4,6 +4,7 @@
  */
 package com.umg.bienestar.sesiones_bienestar.controller;
 
+import com.umg.bienestar.sesiones_bienestar.dto.FacturaRequest;
 import com.umg.bienestar.sesiones_bienestar.entity.EstadoFactura;
 import com.umg.bienestar.sesiones_bienestar.entity.Factura;
 import com.umg.bienestar.sesiones_bienestar.service.impl.FacturaService;
@@ -29,7 +30,21 @@ public class FacturaController {
 
     @Autowired
     private FacturaService facturaService;
-
+    
+    @GetMapping
+    @Operation(summary = "Listar todas las facturas")
+    public ResponseEntity<List<Factura>> listarTodas() {
+        return ResponseEntity.ok(facturaService.listarTodas());
+    }
+    
+    @PostMapping
+    @Operation(summary = "Generar factura", description = "UC-W08: Generar factura para una sesión atendida")
+    public ResponseEntity<Factura> generarFactura(@RequestBody FacturaRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(facturaService.generar(request.getCitaId()));
+    }
+    
+    
     @PostMapping("/generar/{citaId}")
     @Operation(summary = "Generar factura", description = "UC-W08: Generar factura para una sesión atendida")
     public ResponseEntity<Factura> generar(@PathVariable Long citaId) {

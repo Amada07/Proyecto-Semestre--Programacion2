@@ -38,7 +38,6 @@ public class Cita {
     private Servicio servicio;
     
     @NotNull(message = "La fecha y hora son obligatorias")
-    @Future(message = "La cita debe ser en el futuro")
     @Column(name = "fecha_hora", nullable = false)
     private LocalDateTime fechaHora;
     
